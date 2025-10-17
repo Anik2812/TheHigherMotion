@@ -3,34 +3,65 @@ import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Works from './pages/Works';
 import Services from './pages/Services';
-import Courses from './pages/Courses';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import CursorGlow from './components/CursorGlow';
 import './styles/globals.css';
+// Lenis import removed
 
-const pages = ['home', 'works', 'services', 'courses', 'about', 'contact'] as const;
+const pages = ['home', 'works', 'services', 'about', 'contact'] as const;
 type PageType = typeof pages[number];
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: -50, y: -50 });
+  // isCursorHovering state removed
+
+  // Lenis useEffect removed
 
   useEffect(() => {
-    // Simulate initial loading
+    // Sunrise loading animation
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 3500);
     
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsNavExpanded(window.scrollY > 50);
+    };
+
+    // Reverted handleMouseMove to only update cursor position
+    const handleMouseMove = (e: MouseEvent) => {
+      setIsNavExpanded(true);
+      setCursorPos({ x: e.clientX, y: e.clientY });
+      // Hover check removed
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+    // mouseout listener removed
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+      // mouseout listener removal removed
+    };
+  }, []);
+
   const handlePageChange = (page: PageType) => {
-    if (page === currentPage) return;
+    if (page === currentPage || isTransitioning) return;
     
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentPage(page);
+      window.scrollTo(0, 0); 
+      // Lenis scroll update removed
+
       setTimeout(() => {
         setIsTransitioning(false);
       }, 100);
@@ -42,7 +73,6 @@ function App() {
       case 'home': return <Home />;
       case 'works': return <Works />;
       case 'services': return <Services />;
-      case 'courses': return <Courses />;
       case 'about': return <About />;
       case 'contact': return <Contact />;
       default: return <Home />;
@@ -51,24 +81,34 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="cinematic-loader">
-        <div className="loader-text">
-          CINEMA<span className="text-white">EDIT</span>
+      <div className="sunrise-loader">
+        <div className="horizon"></div>
+        <div className="sunrise-text">
+          THE HIGHER<br />MOTION
         </div>
       </div>
     );
   }
+
   return (
     <div className="app">
-      <CursorGlow />
-      <Navigation currentPage={currentPage} onPageChange={handlePageChange} />
+      {/* Reverted Cursor Follower - no hover class */}
+      <div 
+        className="cursor-follower" 
+        style={{ transform: `translate(${cursorPos.x}px, ${cursorPos.y}px)` }}
+      />
+
+      <div className="space-background"></div>
+      
+      <Navigation 
+        currentPage={currentPage} 
+        onPageChange={handlePageChange}
+        isExpanded={isNavExpanded}
+      />
       
       <main className={`page-container ${isTransitioning ? 'transitioning' : ''}`}>
         {renderPage()}
       </main>
-      
-      {/* Background gradient overlay */}
-      <div className="fixed inset-0 pointer-events-none bg-gradient-to-br from-black via-red-950/20 to-black -z-10" />
     </div>
   );
 }
